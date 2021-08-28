@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
+# Use subject to license terms.
+#
+#ident	"@(#)apache.sh	1.5	04/09/16 SMI"
+
+
+# find the named process(es)
+findproc() {
+   pid=`/usr/bin/ps -ef | grep  =cmsdb   |  /usr/bin/awk '{print $2}'`  
+  echo $pid
+}
+
+# kill the named process(es) (borrowed from S15nfs.server)
+killproc() {
+   pid=`findproc $1`
+   [ "$pid" != "" ] && kill  $pid
+}
+
+
+
+case "$1" in
+start|startssl|sslstart|start-SSL)
+	cmdtext="starting" 
+	(  cd /export/home/cmsdb ;\  JAVA_HOME=/usr/java/jdk1.6.0_20; export JAVA_HOME; \
+		    /bin/su cms -c \
+		    "/export/home/cmsdb/serverdb.sh &") \
+		    
+	;;
+restart)
+	cmdtext="restarting"
+	killproc $PIDFILE 	
+	(  cd /export/home/cmsdb ;\  JAVA_HOME=/usr/java/jdk1.6.0_20; export JAVA_HOME; \
+		    /bin/su cms -c \
+		    "/export/home/cmsdb/serverdb.sh &") \
+	;;
+stop)
+	cmdtext="stopping"
+     	killproc $PIDFILE 	    	    
+	;;
+*)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+	;;
+esac
+
+echo "tomcatd $cmdtext."
+
+
+status=$?
+
+if [ $status != 0 ]; then
+	echo "exit status $status"
+	exit 1
+fi
+exit 0
